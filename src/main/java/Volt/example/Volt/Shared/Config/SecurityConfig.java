@@ -1,11 +1,13 @@
 package Volt.example.Volt.Shared.Config;
 
 import Volt.example.Volt.CustomerManagement.Application.Services.JwtServiceImpl;
+import Volt.example.Volt.Shared.Helpers.RequestMatchers;
 import Volt.example.Volt.Shared.filter.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -20,6 +22,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+
+import java.util.List;
 
 
 @EnableWebSecurity
@@ -38,18 +42,17 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/resetPassword/**")
+                        .requestMatchers(RequestMatchers.getRequestMatchersFromPatterns())
                         .hasAuthority("USER")
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(RequestMatchers.getAllPermit()).permitAll()
                         .anyRequest().authenticated()
-                ).userDetailsService(jwtService)
+                )
+                .userDetailsService(jwtService)
                 .sessionManagement(session->session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(
-                        e->e.accessDeniedHandler(
-                                        (request, response, accessDeniedException)->response.setStatus(403)
-                                )
+                        e->e.accessDeniedHandler((request, response, accessDeniedException)->response.setStatus(403))
                                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .logout(l->l
                         .logoutUrl("/api/auth/logout")

@@ -4,51 +4,58 @@ import Volt.example.Volt.CustomerManagement.Application.Dtos.User.*;
 import Volt.example.Volt.CustomerManagement.Application.Interfaces.AuthService;
 import Volt.example.Volt.Shared.ServiceResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+
 @Validated
-@RequestMapping(path = "/api/auth")
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
-
-    @PostMapping("/register")
-    public ResponseEntity<ServiceResponse> register(@Valid @RequestBody UserRegisterDto registerDto) {
-        return authService.register(registerDto);
-
+    private final AuthService authService;
+    private final ExecutorService virtualThreadExecutor;
+    @RequestMapping(method = RequestMethod.POST,
+            path = "/register",  consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<ServiceResponse> register(@Validated @ModelAttribute UserRegisterDto registerDto) {
+        return ResponseEntity.ok(authService.register(registerDto));
     }
 
     @PostMapping("/login")
     public ResponseEntity<ServiceResponse<AuthenticationResult>> login(@Valid @RequestBody UserLoginDto loginDto) {
-        return authService.login(loginDto);
+        boolean isVirtual = Thread.currentThread().isVirtual();
 
+            return ResponseEntity.ok(authService.login(loginDto));
     }
 
     @PostMapping("/resendVerificationEmail")
     public ResponseEntity<ServiceResponse> resendVerificationEmail(@RequestParam String email) {
-        return authService.resendVerificationEmail(email);
+        return ResponseEntity.ok(authService.resendVerificationEmail(email));
     }
 
     @PostMapping("/verify")
     public ResponseEntity<ServiceResponse<AuthenticationResult>> verify(@RequestParam String token) {
-        return authService.verify(token);
+        return ResponseEntity.ok(authService.verify(token));
     }
 
     @PostMapping("/sendEmailToForgetPassword")
     public ResponseEntity<ServiceResponse<String>> sendEmailToForgetPassword(@RequestParam String email) throws Throwable {
-        return authService.sendEmailToForgetPassword(email);
+        return ResponseEntity.ok(authService.sendEmailToForgetPassword(email));
     }
 
     @PostMapping("/forgetPassword")
     public ResponseEntity<ServiceResponse<String>>
     forgetPassword(@Valid @RequestBody ForgetPasswordDto forgetPasswordDto) {
         try {
-            return authService.forgetPassword(forgetPasswordDto);
+            return ResponseEntity.ok(authService.forgetPassword(forgetPasswordDto));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -58,7 +65,7 @@ public class AuthController {
     public ResponseEntity<ServiceResponse<String>> resetPassword(@Valid @RequestBody ResetPasswordDto resetPasswordDto)
              {
                  try {
-                     return authService.resetPassword(resetPasswordDto);
+                     return ResponseEntity.ok(authService.resetPassword(resetPasswordDto));
                  } catch (Exception e) {
                      throw new RuntimeException(e);
                  }
@@ -66,6 +73,6 @@ public class AuthController {
 
     @PostMapping("/validateRefreshToken")
     public ResponseEntity<ServiceResponse<AuthenticationResult>> validateRefreshToken(@RequestParam String token) {
-        return authService.validateRefreshToken(token);
+        return ResponseEntity.ok(authService.validateRefreshToken(token));
     }
 }

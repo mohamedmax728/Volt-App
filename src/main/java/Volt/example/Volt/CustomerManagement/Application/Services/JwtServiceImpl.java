@@ -41,14 +41,14 @@ public class JwtServiceImpl implements UserDetailsService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
     public boolean isValid(String token, User user){
-        return extractEmail(token).equals(user.getEmail()) && !isTokenExpired(token) && isLoggout(token);
+        return user != null &&
+                extractEmail(token).equals(user.getEmail()) && !isTokenExpired(token) && isLoggout(token);
     }
     public boolean isLoggout(String token){
         var refreshToken = refreshTokenRepository.findByJwt(token);
                return refreshToken !=null && !refreshToken.isLoggedOut();
     }
     private boolean isTokenExpired(String token) {
-
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
@@ -59,7 +59,13 @@ public class JwtServiceImpl implements UserDetailsService {
 
     @Override
     public User loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username);
+
+        try {
+            return (User) userRepository.findByEmailIgnoreCase(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User Is Not Found"));
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
 
     }
 }

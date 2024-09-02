@@ -6,7 +6,8 @@ WORKDIR /app
 ARG JAR_FILE=target/*.jar
 # Copy the Spring Boot application JAR file to the container
 COPY ./target/VoltApp-0.0.1-SNAPSHOT.jar app.jar
-
+RUN mkdir -p /app
+RUN chmod 777 /app
 # Expose the port that your Spring Boot application will run on
 EXPOSE 8080
 

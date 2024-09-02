@@ -1,6 +1,7 @@
 package Volt.example.Volt.Shared.Config;
 
 
+import Volt.example.Volt.CustomerManagement.Domain.Enums.UserStatus;
 import Volt.example.Volt.CustomerManagement.Domain.Repositories.RefreshTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,11 +34,20 @@ public class CustomLogoutHandler implements LogoutHandler {
         }
 
         String token = authHeader.substring(7);
-        var storedToken = refreshTokenRepository.findByJwt(token);
+        var storedToken = refreshTokenRepository.findWithUserByJwt(token);
 
         if(storedToken != null) {
             storedToken.setLoggedOut(true);
+            storedToken.getUser().setStatus(UserStatus.Offline);
             refreshTokenRepository.save(storedToken);
         }
+        else{
+            try {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid JWT token");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 }

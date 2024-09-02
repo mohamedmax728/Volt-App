@@ -1,9 +1,13 @@
 package Volt.example.Volt.CustomerManagement.Application.Dtos.User;
 
+import Volt.example.Volt.CustomerManagement.Domain.Enums.Gender;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.web.multipart.MultipartFile;
 
+@Setter
 @Getter
 public class UserRegisterDto {
 
@@ -24,15 +28,17 @@ public class UserRegisterDto {
     @NotBlank(message = "Confirm Password cannot be blank.")
     private String confirmPassword;
 
-    @NotEmpty(message = "First Name cannot be empty.")
-    @NotNull(message = "First Name cannot be blank.")
-    @NotBlank(message = "First Name cannot be blank.")
-    private String firstName;
+    @NotEmpty(message = "Full Name cannot be empty.")
+    @NotNull(message = "Full Name cannot be blank.")
+    @NotBlank(message = "Full Name cannot be blank.")
+    private String fullName;
 
-    @NotEmpty(message = "Last Name cannot be empty.")
-    @NotNull(message = "Last Name cannot be blank.")
-    @NotBlank(message = "Last Name cannot be blank.")
-    private String lastName;
+
+    @NotNull(message = "Gender cannot be null.")
+    private Gender gender;
+
+    @NotNull(message = "Image cannot be null.")
+    private MultipartFile image;
 
     @AssertTrue(message = "Passwords must match")
     public boolean isPasswordMatch() {
