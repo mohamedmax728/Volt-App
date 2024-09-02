@@ -1,17 +1,23 @@
+version: '3.1'
+
 services:
   voltapp1:
     build: .
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5332/volt
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/volt
       SPRING_DATASOURCE_USERNAME: mohamed
       SPRING_DATASOURCE_PASSWORD: adel
+      uploadfilesDir: /app
+    volumes:
+      - ./:/app/ProfilePicture
     depends_on:
       - postgres_db
     networks:
-        - postgres_db
+      - postgres_db
     restart: unless-stopped
+
   postgres_db:
     container_name: postgres
     image: postgres:14.1
@@ -20,12 +26,21 @@ services:
       POSTGRES_PASSWORD: adel
       POSTGRES_DB: volt
     volumes:
-      - C:/VoltApp:/var/lib/postgresql/data
+      - ./Database:/var/lib/postgresql/data
     ports:
       - "5332:5432"
     networks:
       - postgres_db
     restart: unless-stopped
+
+# Uncomment if using Redis
+# redis:
+#   image: redis:latest
+#   ports:
+#     - "6379:6379"
+#   networks:
+#     - postgres_db
+#   restart: unless-stopped
 
 networks:
   postgres_db:

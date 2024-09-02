@@ -15,6 +15,6 @@ public class ResetPasswordDto {
 
 
     @AssertTrue(message = "Password Must Match")
-    Boolean isPasswordMatch(){return password != null && password.equals(confirmPassword);}
+    boolean isPasswordMatch(){return password != null && password.equals(confirmPassword);}
 
 }
