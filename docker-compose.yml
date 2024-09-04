@@ -11,7 +11,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: adel
       uploadfilesDir: /app
     volumes:
-      - ./:/app/ProfilePicture
+      - ./Uploads/ProfilePicture:/app/ProfilePicture
     depends_on:
       - postgres_db
     networks:
@@ -26,7 +26,7 @@ services:
       POSTGRES_PASSWORD: adel
       POSTGRES_DB: volt
     volumes:
-      - ./Database:/var/lib/postgresql/data
+      - ../VoltAppDatabase:/var/lib/postgresql/data
     ports:
       - "5332:5432"
     networks:
