@@ -37,7 +37,6 @@ public class UserRegisterDto {
     @NotNull(message = "Gender cannot be null.")
     private Gender gender;
 
-    @NotNull(message = "Image cannot be null.")
     private MultipartFile image;
 
     @AssertTrue(message = "Passwords must match")

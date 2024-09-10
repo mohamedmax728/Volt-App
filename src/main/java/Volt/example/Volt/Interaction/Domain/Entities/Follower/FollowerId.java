@@ -15,8 +15,8 @@ import java.util.UUID;
 @Data
 @Embeddable
 public class FollowerId implements Serializable {
-    @Column(name = "channel_id", columnDefinition = "UUID")
+    @Column(name = "channel_id")
     private int channelId;
-    @Column(name = "user_id")
+    @Column(name = "user_id",columnDefinition = "UUID")
     private UUID userId;
 }

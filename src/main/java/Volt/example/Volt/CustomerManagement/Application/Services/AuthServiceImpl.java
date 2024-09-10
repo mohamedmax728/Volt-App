@@ -21,7 +21,6 @@ import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
@@ -96,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
         boolean userExists = userRepository.existsByEmailIgnoreCase(registerDto.getEmail().toLowerCase());
         if (userExists) {
             return new ServiceResponse<>(null, false,
-                    "User already exists.", "هذا المستخدم غير موجود.", HttpStatus.BAD_REQUEST);
+                    "User already exists.", "هذا المستخدم موجود بالفعل.", HttpStatus.BAD_REQUEST);
         }
 
         try {
@@ -110,12 +109,9 @@ public class AuthServiceImpl implements AuthService {
                 uploadDir.mkdirs();
             }
 
-            // Save the file
             String filePath = uploadFilesDir + "/ProfilePicture/" + registerDto.getImage().getOriginalFilename();
             registerDto.getImage().transferTo(new File(filePath));
-            System.out.println("Received DTO: " + uploadFilesDir);
 
-            // Map DTO to User entity
             User user = new User();
             user.setImagePath(filePath.toString());
             user.setFullName(registerDto.getFullName());

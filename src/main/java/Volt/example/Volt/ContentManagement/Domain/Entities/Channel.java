@@ -41,7 +41,10 @@ public class Channel {
     private String facebookUrl;
     @Column(nullable = false,name = "num_of_followers")
     private Long numOfFollowers;
-
+    @Column(name = "image_path")
+    private String imagePath;
+    @Column(name = "backgound_image_path")
+    private String backgoundImagePath;
     @Column(nullable = false,name = "creation_date")
     @CreatedDate
     private LocalDateTime creationDate;

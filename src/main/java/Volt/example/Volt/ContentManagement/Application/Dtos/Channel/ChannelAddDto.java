@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
@@ -26,6 +27,9 @@ public class ChannelAddDto
          String instagramUrl;
          String youtubeUrl;
          String facebookUrl;
+         MultipartFile backgoundImage;
+         MultipartFile profileImage;
+         Boolean isProfileImageUpdated = false;
          @NotNull(message = "Categories must be not null")
          @Size(min = 1, message = "Must select at least one category")
          Set<Integer> categories;

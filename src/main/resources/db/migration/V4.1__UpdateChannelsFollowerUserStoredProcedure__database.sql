@@ -1,10 +1,20 @@
-create or replace procedure delete_followers_update_channels_and_users(
+CREATE OR REPLACE PROCEDURE AddAndDelete_followers_update_channels_and_users(
     p_user_id UUID,
-    p_unfollower_ids int[]
+    p_follower_ids INT[],
+    p_unfollower_ids INT[]
 )
-language plpgsql
-as $$
-begin
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    item INT;
+BEGIN
+    FOR item IN SELECT unnest(p_follower_ids)
+    LOOP
+        INSERT INTO interaction.followers (user_id, channel_id)
+        VALUES (p_user_id, item)
+        ON CONFLICT (user_id, channel_id) DO NOTHING;
+    END LOOP;
+
     DELETE FROM interaction.followers
     WHERE user_id = p_user_id
       AND channel_id = ANY(p_unfollower_ids);
@@ -21,8 +31,8 @@ begin
     SET num_of_followers = (
         SELECT COUNT(*)
         FROM interaction.followers
-        WHERE channel_id = ANY(p_unfollower_ids)
+        WHERE channel_id = content_management.channels.id
     )
-    WHERE id = ANY(p_unfollower_ids);
-end
-$$
+    WHERE id = ANY(p_unfollower_ids) or id = ANY(p_follower_ids);
+END;
+$$;

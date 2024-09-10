@@ -25,7 +25,7 @@ public class RequestMatchers {
     public static RequestMatcher[] getRequestMatchersFromPatterns() {
         List<String> patterns = List.of(
                 "/api/auth/resetPassword/**",
-                "/api/mobile/content_management/channel/**",
+                "/api/mobile/contentManagement/channel/**",
                 "/api/mobile/interaction/follower/**"
         );
          var list = patterns.stream()

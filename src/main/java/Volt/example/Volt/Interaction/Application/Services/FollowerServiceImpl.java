@@ -2,7 +2,6 @@ package Volt.example.Volt.Interaction.Application.Services;
 
 import Volt.example.Volt.ContentManagement.Application.Dtos.Channel.ChannelSelectListDto;
 import Volt.example.Volt.ContentManagement.Application.Mapping.ChannelProfiler;
-import Volt.example.Volt.ContentManagement.Domain.Entities.Channel;
 import Volt.example.Volt.CustomerManagement.Application.Interfaces.AuthService;
 import Volt.example.Volt.Interaction.Application.Dtos.FollowerListDto;
 import Volt.example.Volt.Interaction.Application.Interfaces.FollowerService;
@@ -42,14 +41,14 @@ public class FollowerServiceImpl implements FollowerService {
         );
 
         var currentUserId = authService.getCurrentUserId();
-        Page<Channel> channelPages = followerRepository.findChannelsByUserId(currentUserId, page);
-        if(channelPages.isEmpty()){
+        Page<Follower> followerPages = followerRepository.findFollowersByChannelNameAndUserId(currentUserId, searchModel.getName(), page);
+        if(followerPages.isEmpty()){
             return new ServiceResponse<>(null, false,"there is no channels",
                     "لا يوجد قنوات", HttpStatus.NOT_FOUND);
         }
 
         return new ServiceResponse<PagedResult<ChannelSelectListDto>>
-                (channelProfiler.toChannelSelectListDto(channelPages),
+                (channelProfiler.toChannelSelectListDto(followerPages.map(s->s.getChannel())),
                         true, "","", HttpStatus.OK);
     }
 
@@ -60,9 +59,11 @@ public class FollowerServiceImpl implements FollowerService {
             var followerslist = followerListDto.getFollowers().stream().map(
                     s-> new Follower(new FollowerId(s, currentUserId), null,null)
             ).collect(Collectors.toSet());
-            followerRepository.saveAll(followerslist);
-            followerRepository.deleteByUserIdAndChannelIdInAndUpdateNumOfFollowingAndFollowers
-                    (currentUserId, followerListDto.getUnFollowers());
+            followerRepository.AddAndDeleteByUserIdAndChannelIdInAndUpdateNumOfFollowingAndFollowers
+                    (currentUserId,
+                            followerListDto.getFollowers().stream().mapToInt(Integer::intValue).toArray(),
+                            followerListDto.getUnFollowers().stream().mapToInt(Integer::intValue).toArray()
+                            );
             return new ServiceResponse(null,true,  "", "", HttpStatus.OK);
         }
         catch (Exception ex) {

@@ -4,6 +4,7 @@ import Volt.example.Volt.ContentManagement.Application.Dtos.Channel.ChannelAddDt
 import Volt.example.Volt.ContentManagement.Application.Dtos.Channel.ChannelSelectListDto;
 import Volt.example.Volt.ContentManagement.Domain.Entities.Channel;
 import Volt.example.Volt.Shared.Dtos.PagedResult;
+import Volt.example.Volt.Shared.Helpers.UploadFiles;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -25,7 +26,11 @@ public class ChannelProfiler {
         var pagedResult = new PagedResult<ChannelSelectListDto>();
         pagedResult.setData(
                 channels.stream().map(
-                        item -> modelMapper.map(item, ChannelSelectListDto.class)
+                        item -> {
+                            var channelDto = modelMapper.map(item, ChannelSelectListDto.class);
+                            channelDto.setProfileImage(UploadFiles.downloadFile(item.getImagePath()));
+                            return channelDto;
+                        }
                 ).collect(Collectors.toList())
         );
         pagedResult.setPageSize(channels.getSize());

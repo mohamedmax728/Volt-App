@@ -9,18 +9,18 @@ import Volt.example.Volt.ContentManagement.Application.Interfaces.ChannelService
 import Volt.example.Volt.ContentManagement.Application.Mapping.ChannelProfiler;
 import Volt.example.Volt.ContentManagement.Domain.Entities.Category;
 import Volt.example.Volt.ContentManagement.Domain.Entities.Channel;
-import Volt.example.Volt.ContentManagement.Domain.Repositories.CategoryRepository;
 import Volt.example.Volt.ContentManagement.Domain.Repositories.ChannelRepository;
 import Volt.example.Volt.CustomerManagement.Application.Interfaces.AuthService;
 import Volt.example.Volt.CustomerManagement.Domain.Entities.User;
 import Volt.example.Volt.CustomerManagement.Domain.Repositories.UserRepository;
 import Volt.example.Volt.Shared.Dtos.PagedResult;
 import Volt.example.Volt.Shared.Dtos.SearchModel;
+import Volt.example.Volt.Shared.Helpers.UploadFiles;
 import Volt.example.Volt.Shared.Helpers.Utilities;
 import Volt.example.Volt.Shared.ServiceResponse;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.cache.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 
@@ -44,8 +44,9 @@ public class ChannelServiceImpl implements ChannelService {
     private final ChannelRepository channelRepository;
     private final ModelMapper modelMapper;
     private final ChannelProfiler channelProfiler;
-    private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    @Value("${uploadfilesDir}")
+    private String uploadFilesDir;
     @Transactional
     @Override
     public ServiceResponse create(ChannelAddDto channelAddDto) {
@@ -71,8 +72,22 @@ public class ChannelServiceImpl implements ChannelService {
                     }
             ).collect(Collectors.toSet());
             entity.setCategories(categories);
-            User user = currentChannel.get().getUser();
+            UUID currentUser = authService.getCurrentUserId();
+            User user = (User)userRepository.findById(currentUser).get();
             entity.setUser(user);
+            user.setFullName(channelAddDto.getName());
+
+            if(!Utilities.isNullOrEmpty(user.getImagePath())){
+                UploadFiles.deleteFile(user.getImagePath());
+            }
+            String profileImgPath = UploadFiles.uploadProfileImages(channelAddDto.getProfileImage(),
+                    uploadFilesDir + "/ProfilePicture/");
+            String backGroundImgPath = UploadFiles.uploadProfileImages(channelAddDto.getBackgoundImage(),
+                    uploadFilesDir + "/ProfilePicture/");
+            entity.setImagePath(profileImgPath);
+            entity.setBackgoundImagePath(backGroundImgPath);
+            user.setImagePath(profileImgPath);
+
             channelRepository.save(entity);
             return new ServiceResponse<>(null, true,
                     "Channel created successfully!!", "تم انشاء القناة بنجاح!!",
@@ -86,10 +101,11 @@ public class ChannelServiceImpl implements ChannelService {
 
     @Transactional
     @Override
-    @CacheEvict(value = "channelDetails", key = "#userId")
-    public ServiceResponse update(ChannelUpdateDto channelUpdateDto, UUID userId) {
+//    @CacheEvict(value = "channelDetails", key = "#userId")
+    public ServiceResponse update(ChannelUpdateDto channelUpdateDto) {
         try {
-            Optional<Channel> currentChannel = channelRepository.findChannelByUser_Id(userId);
+            UUID currentUserId = authService.getCurrentUserId();
+            Optional<Channel> currentChannel = channelRepository.findChannelByUser_Id(currentUserId);
             if(currentChannel.isEmpty()){
                 return new ServiceResponse<>(null, false,
                         "there is no channel created before related to this account!!",
@@ -117,6 +133,22 @@ public class ChannelServiceImpl implements ChannelService {
                     }
             ).collect(Collectors.toSet());
             channel.getCategories().addAll(addedCategories);
+
+            if(!Utilities.isNullOrEmpty(channel.getUser().getImagePath()) && channelUpdateDto.getIsProfileImageUpdated() ){
+                UploadFiles.deleteFile(channel.getUser().getImagePath());
+            }
+            if(channelUpdateDto.getIsBackgoundImageUpdated()){
+                UploadFiles.deleteFile(channel.getBackgoundImagePath());
+            }
+
+            String profileImgPath = UploadFiles.uploadProfileImages(channelUpdateDto.getProfileImage()
+                ,uploadFilesDir + "/ProfilePicture/");
+            String backGroundImgPath = UploadFiles.uploadProfileImages(channelUpdateDto.getBackgoundImage()
+                ,uploadFilesDir + "/ProfilePicture/");
+            channel.setImagePath(profileImgPath);
+            channel.setBackgoundImagePath(backGroundImgPath);
+            channel.getUser().setImagePath(profileImgPath);
+            channel.getUser().setFullName(channelUpdateDto.getName());
             channelRepository.save(channel);
             return new ServiceResponse<>(null, true,
                     "Channel updated successfully!!", "تم تعديل القناة بنجاح!!",
@@ -130,9 +162,10 @@ public class ChannelServiceImpl implements ChannelService {
 
     @Transactional(readOnly = true)
     @Override
-    @Cacheable(key = "#userId", value = "channelDetails")
-    public ServiceResponse<ChannelDetailsDto> getCurrent(UUID userId) {
-        Optional<Channel> channelOpt = channelRepository.findChannelByUser_Id(userId);
+//    @Cacheable(key = "#userId", value = "channelDetails")
+    public ServiceResponse<ChannelDetailsDto> getCurrent() {
+        UUID currentUserId = authService.getCurrentUserId();
+        Optional<Channel> channelOpt = channelRepository.findChannelByUser_Id(currentUserId);
         if(channelOpt.isEmpty()){
             return new ServiceResponse<>(null, false,"Channel is not exists",
                     "هذه القناة غير موجودة", HttpStatus.NOT_FOUND);
@@ -146,9 +179,10 @@ public class ChannelServiceImpl implements ChannelService {
                              category, CategoryDetailsDto.class
                      ));
                  });
-
         channelDetailsDto.setNumOfFollowing(channel.getUser().getNumOfFollowing());
         channelDetailsDto.setEmail(channel.getUser().getEmail());
+        channelDetailsDto.setProfileImage(UploadFiles.downloadFile(channel.getImagePath()));
+        channelDetailsDto.setBackgoundImage(UploadFiles.downloadFile(channel.getBackgoundImagePath()));
         return new ServiceResponse<>(channelDetailsDto,
                 true,"","", HttpStatus.OK);
     }
