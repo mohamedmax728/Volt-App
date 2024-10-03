@@ -11,6 +11,7 @@ import Volt.example.Volt.CustomerManagement.Domain.Enums.Role;
 import Volt.example.Volt.CustomerManagement.Domain.Enums.UserStatus;
 import Volt.example.Volt.CustomerManagement.Domain.Repositories.RefreshTokenRepository;
 import Volt.example.Volt.CustomerManagement.Domain.Repositories.UserRepository;
+import Volt.example.Volt.Shared.Helpers.UploadFiles;
 import Volt.example.Volt.Shared.ServiceResponse;
 
 import io.jsonwebtoken.Jwts;
@@ -91,15 +92,17 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public ServiceResponse register(@NotNull UserRegisterDto registerDto) {
 
-        // Check if the user already exists
-        boolean userExists = userRepository.existsByEmailIgnoreCase(registerDto.getEmail().toLowerCase());
+        boolean userExists = userRepository.existsByEmailIgnoreCaseOrUserNameIgnoreCase
+                (registerDto.getEmail().toLowerCase(), registerDto.getUserName().toLowerCase());
         if (userExists) {
             return new ServiceResponse<>(null, false,
                     "User already exists.", "هذا المستخدم موجود بالفعل.", HttpStatus.BAD_REQUEST);
         }
-
+        if(!UploadFiles.isImageFile(registerDto.getImage())){
+            return new ServiceResponse<>(null, false,
+                    "please enter correct image", "من فضلك ادخل صورة", HttpStatus.BAD_REQUEST);
+        }
         try {
-            // Create password hash and salt
             byte[] passwordHash = new byte[64];
             byte[] passwordSalt = new byte[64];
             Utility.createPasswordHash(registerDto.getPassword(), passwordHash, passwordSalt);
@@ -108,25 +111,23 @@ public class AuthServiceImpl implements AuthService {
             if (!uploadDir.exists()) {
                 uploadDir.mkdirs();
             }
-
-            String filePath = uploadFilesDir + "/ProfilePicture/" + registerDto.getImage().getOriginalFilename();
-            registerDto.getImage().transferTo(new File(filePath));
+            String filePath = UploadFiles.uploadProfileImages(registerDto.getImage()
+                    ,uploadFilesDir + "/ProfilePicture/");
 
             User user = new User();
             user.setImagePath(filePath.toString());
             user.setFullName(registerDto.getFullName());
             user.setGender(registerDto.getGender());
             user.setEmail(registerDto.getEmail());
+            user.setUserName(registerDto.getUserName());
             user.setPasswordHash(passwordHash);
             user.setPasswordSalt(passwordSalt);
             user.setNumOfFollowing(0L);
             user.setVerificationToken(Utility.createRandomToken());
             user.setRole(Role.USER);
             user.setStatus(UserStatus.Offline);
-            // Send OTP email
             emailService.sendVerificationEmail(user.getEmail(), user.getVerificationToken());
 
-            // Save user to the database
             userRepository.save(user);
 
             return new ServiceResponse<>(null, true,
@@ -200,6 +201,33 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Transactional
+    public ServiceResponse<String> verifyForgetPasswordOTP(ForgetPasswordVerificationOtpDto forgetPasswordVerificationOtpDto){
+        Optional<User> optUser = userRepository.findByEmailIgnoreCase(forgetPasswordVerificationOtpDto.getEmail());
+        if (optUser.isEmpty()) {
+            return
+                    new ServiceResponse<>(null,
+                            false, "Email does not exist.", "البريد الإلكتروني غير موجود.",HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        var user = optUser.get();
+        if (user.getPasswordResetToken() == null || !user.getPasswordResetToken().equals(forgetPasswordVerificationOtpDto.getOtp()) || user.getResetTokenExpires().isBefore(LocalDateTime.now())) {
+            return
+                    new ServiceResponse<>(null,
+                            false, "Invalid OTP.",
+                            "رمز التحقق غير صالح.",
+                            HttpStatus.INTERNAL_SERVER_ERROR
+                    );
+        }
+        user.setPasswordResetToken(null);
+        user.setResetTokenExpires(null);
+        userRepository.save(user);
+        return
+                new ServiceResponse<>(null,
+                        true, "Verified successfully.",
+                        "تم التحقق بنجاح."
+                        , HttpStatus.OK);
+    }
+
+    @Transactional
     public ServiceResponse<String> forgetPassword(ForgetPasswordDto forgetPasswordDto) throws Exception {
         Optional<User> optUser = userRepository.findByEmailIgnoreCase(forgetPasswordDto.getEmail());
         if (optUser.isEmpty()) {
@@ -208,23 +236,12 @@ public class AuthServiceImpl implements AuthService {
         false, "Email does not exist.", "البريد الإلكتروني غير موجود.",HttpStatus.INTERNAL_SERVER_ERROR);
         }
         var user = optUser.get();
-        if (user.getPasswordResetToken() == null || !user.getPasswordResetToken().equals(forgetPasswordDto.getOtp()) || user.getResetTokenExpires().isBefore(LocalDateTime.now())) {
-            return
-                    new ServiceResponse<>(null,
-                            false, "Invalid OTP.",
-                            "رمز التحقق غير صالح.",
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
 
         byte[] passwordHash = new byte[64];
         byte[] passwordSalt = new byte[64];
         Utility.createPasswordHash(forgetPasswordDto.getPassword(), passwordHash, passwordSalt);
         user.setPasswordHash(passwordHash);
         user.setPasswordSalt(passwordSalt);
-        user.setPasswordResetToken(null);
-        user.setResetTokenExpires(null);
-
         userRepository.save(user);
         return
                 new ServiceResponse<>(null,

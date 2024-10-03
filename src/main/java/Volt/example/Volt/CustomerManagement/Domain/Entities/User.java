@@ -32,6 +32,8 @@ public class User implements UserDetails {
     private UUID id;
     @Column(nullable = false, unique = true)
     private String email;
+    @Column(name = "user_name", nullable = false, unique = true)
+    private String userName;
     @Column(name = "full_name", nullable = false)
     private String fullName;
     @Column(name = "image_path", nullable = false)

@@ -1,6 +1,7 @@
 package Volt.example.Volt.CustomerManagement.Application.Dtos.User;
 
 import Volt.example.Volt.CustomerManagement.Domain.Enums.Gender;
+import Volt.example.Volt.Shared.Helpers.UploadFiles;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,23 +14,28 @@ public class UserRegisterDto {
 
     @NotBlank(message = "Email cannot be blank.")
     @NotEmpty(message = "Email cannot be empty.")
-    @NotNull(message = "Email cannot be blank.")
+    @NotNull(message = "Email cannot be null.")
     @Email(message = "Email should be valid.")
     private String email;
+
+    @NotBlank(message = "UserName cannot be blank.")
+    @NotEmpty(message = "UserName cannot be empty.")
+    @NotNull(message = "UserName cannot be null.")
+    private String userName;
 
     @NotBlank(message = "Password cannot be blank.")
     @Length(min = 6, message = "Password must be at least 6 characters long.")
     @NotEmpty(message = "Password cannot be empty.")
-    @NotNull(message = "Password cannot be blank.")
+    @NotNull(message = "Password cannot be null.")
     private String password;
 
     @NotEmpty(message = "Confirm Password cannot be empty.")
-    @NotNull(message = "Confirm Password cannot be blank.")
+    @NotNull(message = "Confirm Password cannot be null.")
     @NotBlank(message = "Confirm Password cannot be blank.")
     private String confirmPassword;
 
     @NotEmpty(message = "Full Name cannot be empty.")
-    @NotNull(message = "Full Name cannot be blank.")
+    @NotNull(message = "Full Name cannot be null.")
     @NotBlank(message = "Full Name cannot be blank.")
     private String fullName;
 
@@ -40,7 +46,11 @@ public class UserRegisterDto {
     private MultipartFile image;
 
     @AssertTrue(message = "Passwords must match")
-    public boolean isPasswordMatch() {
+    boolean isPasswordMatch() {
         return password != null && password.equals(confirmPassword);
     }
+
+    @AssertTrue(message = "please, choose image")
+    boolean isImage(){return UploadFiles.isImageFile(image);}
 }
+

@@ -20,7 +20,7 @@ public class ChannelDetailsDto {
     private Long numOfFollowers;
     private Long numOfFollowing;
     private String email;
-    private byte[] backgoundImage;
-    private byte[] profileImage;
+    private String backgoundImage;
+    private String profileImage;
     private Set<CategoryDetailsDto> categoryDetailsDto;
 }

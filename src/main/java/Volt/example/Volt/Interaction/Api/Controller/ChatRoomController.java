@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/mobile/interaction/chatRoom")
+@RequestMapping("/api/interaction/chatRoom")
 @RequiredArgsConstructor
 public class ChatRoomController {
     private final ChatService chatService;

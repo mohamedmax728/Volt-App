@@ -25,12 +25,6 @@ public class ForgetPasswordDto {
     @NotBlank(message = "Confirm Password cannot be blank.")
     private String confirmPassword;
 
-    @NotEmpty(message = "OTP cannot be empty.")
-    @NotNull(message = "OTP cannot be blank.")
-    @NotBlank(message = "OTP cannot be blank.")
-    @Length(min = 6, max = 6, message = "OTP must be exactly 6 characters long.")
-    private String otp;
-
     @AssertTrue(message = "password must be equals confirm password.")
     boolean isValid(){
         return password != null && password.equals(confirmPassword);

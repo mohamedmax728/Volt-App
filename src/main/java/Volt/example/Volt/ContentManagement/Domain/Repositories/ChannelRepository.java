@@ -31,12 +31,18 @@ public interface ChannelRepository<S extends  Channel> extends JpaRepository<Cha
 
     @EntityGraph(attributePaths = "categories")
     @Query("SELECT c FROM Channel c " +
-            "INNER JOIN c.categories cat " +
+            "JOIN c.categories cat " +
             "WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :channelName, '%')) " +
-            "AND cat.id = :categoryId")
+            "AND cat.id IN :categoryIds order by c.numOfFollowers DESC")
     Page<Channel> findAllByCategoryIdAndNameContainingIgnoreCase(
-            @Param("categoryId") int categoryId,
-            @Param("channelName") String channelName, Pageable pageable);
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("channelName") String channelName,
+            Pageable pageable);
+
+    @Query("SELECT c FROM Channel c order by c.numOfFollowers DESC")
+    Page<Channel> findTopChannelNumOfFollowes(
+            @Param("channelName") String channelName,
+            Pageable pageable);
 
     @EntityGraph(attributePaths = "categories")
     @Query("SELECT c FROM Channel c " +

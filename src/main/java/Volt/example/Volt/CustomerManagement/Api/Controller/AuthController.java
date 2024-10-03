@@ -5,14 +5,11 @@ import Volt.example.Volt.CustomerManagement.Application.Interfaces.AuthService;
 import Volt.example.Volt.Shared.ServiceResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Validated
@@ -31,7 +28,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ServiceResponse<AuthenticationResult>> login(@Valid @RequestBody UserLoginDto loginDto) {
-        boolean isVirtual = Thread.currentThread().isVirtual();
 
             return ResponseEntity.ok(authService.login(loginDto));
     }
@@ -49,6 +45,18 @@ public class AuthController {
     @PostMapping("/sendEmailToForgetPassword")
     public ResponseEntity<ServiceResponse<String>> sendEmailToForgetPassword(@RequestParam String email) throws Throwable {
         return ResponseEntity.ok(authService.sendEmailToForgetPassword(email));
+    }
+
+    @PostMapping("/verifyForgetPasswordOTP")
+    public ResponseEntity<ServiceResponse<String>>
+    verifyForgetPasswordOTP(
+            @Valid @RequestBody ForgetPasswordVerificationOtpDto VerificationOtpDto
+    ) {
+        try {
+            return ResponseEntity.ok(authService.verifyForgetPasswordOTP(VerificationOtpDto));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @PostMapping("/forgetPassword")

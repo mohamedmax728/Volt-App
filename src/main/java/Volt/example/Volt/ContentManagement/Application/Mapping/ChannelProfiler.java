@@ -4,9 +4,9 @@ import Volt.example.Volt.ContentManagement.Application.Dtos.Channel.ChannelAddDt
 import Volt.example.Volt.ContentManagement.Application.Dtos.Channel.ChannelSelectListDto;
 import Volt.example.Volt.ContentManagement.Domain.Entities.Channel;
 import Volt.example.Volt.Shared.Dtos.PagedResult;
-import Volt.example.Volt.Shared.Helpers.UploadFiles;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import java.util.stream.Collectors;
@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 @Component
 public class ChannelProfiler {
     private final ModelMapper modelMapper;
+    @Value("${viewfileendpoint}")
+    private String viewfileendpoint;
     public Channel fromChannelAddDto(ChannelAddDto channelAddDto){
 
         var entity = modelMapper.map(channelAddDto, Channel.class);
@@ -28,7 +30,7 @@ public class ChannelProfiler {
                 channels.stream().map(
                         item -> {
                             var channelDto = modelMapper.map(item, ChannelSelectListDto.class);
-                            channelDto.setProfileImage(UploadFiles.downloadFile(item.getImagePath()));
+                            channelDto.setProfileImage(viewfileendpoint + "/" + item.getImagePath());
                             return channelDto;
                         }
                 ).collect(Collectors.toList())

@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/mobile/interaction/follower")
+@RequestMapping("/api/interaction/follower")
 @RequiredArgsConstructor
 public class FollowerController {
     private final FollowerService followerService;

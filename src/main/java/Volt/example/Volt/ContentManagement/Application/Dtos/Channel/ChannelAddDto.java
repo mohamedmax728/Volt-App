@@ -1,9 +1,8 @@
 package Volt.example.Volt.ContentManagement.Application.Dtos.Channel;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import Volt.example.Volt.Shared.Helpers.UploadFiles;
+import Volt.example.Volt.Shared.Helpers.Utilities;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,4 +32,10 @@ public class ChannelAddDto
          @NotNull(message = "Categories must be not null")
          @Size(min = 1, message = "Must select at least one category")
          Set<Integer> categories;
+
+         @AssertTrue(message = "please, choose image for your profile image")
+         boolean isProfileImage(){return !Utilities.isNull(profileImage) && UploadFiles.isImageFile(profileImage);}
+
+         @AssertTrue(message = "please, choose image for your profile image")
+         boolean isBackgroundImage(){return !Utilities.isNull(backgoundImage) && UploadFiles.isImageFile(backgoundImage);}
 }

@@ -25,8 +25,8 @@ public class RequestMatchers {
     public static RequestMatcher[] getRequestMatchersFromPatterns() {
         List<String> patterns = List.of(
                 "/api/auth/resetPassword/**",
-                "/api/mobile/contentManagement/channel/**",
-                "/api/mobile/interaction/follower/**"
+                "/api/contentManagement/channel/**",
+                "/api/interaction/follower/**"
         );
          var list = patterns.stream()
                 .map(pattern -> new AntPathRequestMatcher(pattern))
@@ -38,7 +38,8 @@ public class RequestMatchers {
     public static RequestMatcher[] getAllPermit() {
         List<String> patterns = List.of(
                 "/api/auth/**",
-                "/api/mobile/content_management/channel/channel/get/**"
+                "/api/fileManager/**",
+                "/api/contentManagement/category/**"
         );
         var list = patterns.stream()
                 .map(pattern -> new AntPathRequestMatcher(pattern))

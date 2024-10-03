@@ -16,6 +16,7 @@ public interface AuthService {
     ServiceResponse resendVerificationEmail(String email);
     ServiceResponse<String> sendEmailToForgetPassword(String email) throws Throwable;
     ServiceResponse<String> forgetPassword(ForgetPasswordDto forgetPasswordDto) throws Exception;
+    ServiceResponse<String> verifyForgetPasswordOTP(ForgetPasswordVerificationOtpDto forgetPasswordVerificationOtpDto);
     ServiceResponse<String> resetPassword(ResetPasswordDto resetPasswordDto) throws Exception;
     ServiceResponse<AuthenticationResult> validateRefreshToken(String token);
     String getCurrentUserEmail();

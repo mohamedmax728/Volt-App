@@ -9,6 +9,6 @@ public class ChannelSelectListDto {
     private int id;
     private String name;
     private Long numOfFollowers;
-    private byte[] profileImage;
+    private String profileImage;
 
 }

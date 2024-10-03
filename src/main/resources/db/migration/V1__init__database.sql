@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS user_management.users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(50) NOT NULL UNIQUE,
     full_name TEXT NOT NULL,
+    user_name TEXT NOT NULL UNIQUE,
     image_path VARCHAR(80) NOT NULL,
     gender VARCHAR(20) NOT NULL,
     status VARCHAR(20) NOT NULL,

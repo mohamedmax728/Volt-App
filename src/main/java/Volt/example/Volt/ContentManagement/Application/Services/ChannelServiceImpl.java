@@ -1,10 +1,7 @@
 package Volt.example.Volt.ContentManagement.Application.Services;
 
 import Volt.example.Volt.ContentManagement.Application.Dtos.Category.CategoryDetailsDto;
-import Volt.example.Volt.ContentManagement.Application.Dtos.Channel.ChannelAddDto;
-import Volt.example.Volt.ContentManagement.Application.Dtos.Channel.ChannelDetailsDto;
-import Volt.example.Volt.ContentManagement.Application.Dtos.Channel.ChannelSelectListDto;
-import Volt.example.Volt.ContentManagement.Application.Dtos.Channel.ChannelUpdateDto;
+import Volt.example.Volt.ContentManagement.Application.Dtos.Channel.*;
 import Volt.example.Volt.ContentManagement.Application.Interfaces.ChannelService;
 import Volt.example.Volt.ContentManagement.Application.Mapping.ChannelProfiler;
 import Volt.example.Volt.ContentManagement.Domain.Entities.Category;
@@ -47,6 +44,8 @@ public class ChannelServiceImpl implements ChannelService {
     private final UserRepository userRepository;
     @Value("${uploadfilesDir}")
     private String uploadFilesDir;
+    @Value("${viewfileendpoint}")
+    private String viewfileendpoint;
     @Transactional
     @Override
     public ServiceResponse create(ChannelAddDto channelAddDto) {
@@ -77,17 +76,36 @@ public class ChannelServiceImpl implements ChannelService {
             entity.setUser(user);
             user.setFullName(channelAddDto.getName());
 
+            if(channelAddDto.getIsProfileImageUpdated()){
+                if(!Utilities.isNullOrEmpty(user.getImagePath())){
+                    UploadFiles.deleteFile(user.getImagePath());
+                }
+                String profileImgPath = UploadFiles.uploadProfileImages(channelAddDto.getProfileImage()
+                        ,uploadFilesDir + "/ProfilePicture/");
+                user.setImagePath(profileImgPath);
+                entity.setImagePath(profileImgPath);
+            }
+
             if(!Utilities.isNullOrEmpty(user.getImagePath())){
                 UploadFiles.deleteFile(user.getImagePath());
             }
-            String profileImgPath = UploadFiles.uploadProfileImages(channelAddDto.getProfileImage(),
-                    uploadFilesDir + "/ProfilePicture/");
-            String backGroundImgPath = UploadFiles.uploadProfileImages(channelAddDto.getBackgoundImage(),
-                    uploadFilesDir + "/ProfilePicture/");
-            entity.setImagePath(profileImgPath);
-            entity.setBackgoundImagePath(backGroundImgPath);
-            user.setImagePath(profileImgPath);
-
+            if(!Utilities.isNullOrEmpty(user.getImagePath()) && channelAddDto.getIsProfileImageUpdated() ){
+                UploadFiles.deleteFile(user.getImagePath());
+            }
+            if(channelAddDto.getIsProfileImageUpdated()){
+                String profileImgPath = UploadFiles.uploadProfileImages(channelAddDto.getProfileImage(),
+                        uploadFilesDir + "/ProfilePicture/");
+                entity.setImagePath(profileImgPath);
+                user.setImagePath(profileImgPath);
+            }
+            else{
+                entity.setImagePath(user.getImagePath());
+            }
+            if(!channelAddDto.getProfileImage().isEmpty()){
+                String backGroundImgPath = UploadFiles.uploadProfileImages(channelAddDto.getBackgoundImage(),
+                        uploadFilesDir + "/ProfilePicture/");
+                entity.setBackgoundImagePath(backGroundImgPath);
+            }
             channelRepository.save(entity);
             return new ServiceResponse<>(null, true,
                     "Channel created successfully!!", "تم انشاء القناة بنجاح!!",
@@ -134,20 +152,21 @@ public class ChannelServiceImpl implements ChannelService {
             ).collect(Collectors.toSet());
             channel.getCategories().addAll(addedCategories);
 
-            if(!Utilities.isNullOrEmpty(channel.getUser().getImagePath()) && channelUpdateDto.getIsProfileImageUpdated() ){
-                UploadFiles.deleteFile(channel.getUser().getImagePath());
+            if(channelUpdateDto.getIsProfileImageUpdated()){
+                if(!Utilities.isNullOrEmpty(channel.getUser().getImagePath())){
+                     UploadFiles.deleteFile(channel.getUser().getImagePath());
+                }
+                String profileImgPath = UploadFiles.uploadProfileImages(channelUpdateDto.getProfileImage()
+                    ,uploadFilesDir + "/ProfilePicture/");
+                channel.setImagePath(profileImgPath);
+                channel.getUser().setImagePath(profileImgPath);
             }
             if(channelUpdateDto.getIsBackgoundImageUpdated()){
                 UploadFiles.deleteFile(channel.getBackgoundImagePath());
+                String backGroundImgPath = UploadFiles.uploadProfileImages(channelUpdateDto.getBackgoundImage()
+                        ,uploadFilesDir + "/ProfilePicture/");
+                channel.setBackgoundImagePath(backGroundImgPath);
             }
-
-            String profileImgPath = UploadFiles.uploadProfileImages(channelUpdateDto.getProfileImage()
-                ,uploadFilesDir + "/ProfilePicture/");
-            String backGroundImgPath = UploadFiles.uploadProfileImages(channelUpdateDto.getBackgoundImage()
-                ,uploadFilesDir + "/ProfilePicture/");
-            channel.setImagePath(profileImgPath);
-            channel.setBackgoundImagePath(backGroundImgPath);
-            channel.getUser().setImagePath(profileImgPath);
             channel.getUser().setFullName(channelUpdateDto.getName());
             channelRepository.save(channel);
             return new ServiceResponse<>(null, true,
@@ -181,20 +200,21 @@ public class ChannelServiceImpl implements ChannelService {
                  });
         channelDetailsDto.setNumOfFollowing(channel.getUser().getNumOfFollowing());
         channelDetailsDto.setEmail(channel.getUser().getEmail());
-        channelDetailsDto.setProfileImage(UploadFiles.downloadFile(channel.getImagePath()));
-        channelDetailsDto.setBackgoundImage(UploadFiles.downloadFile(channel.getBackgoundImagePath()));
+        channelDetailsDto.setProfileImage(viewfileendpoint + "/" + channel.getImagePath());
+        channelDetailsDto.setBackgoundImage(viewfileendpoint + "/" + channel.getBackgoundImagePath());
         return new ServiceResponse<>(channelDetailsDto,
                 true,"","", HttpStatus.OK);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public ServiceResponse<PagedResult<ChannelSelectListDto>> getManyByCategory(int categoryId, SearchModel searchModel) {
+    public ServiceResponse<PagedResult<ChannelSelectListDto>> getManyByCategory(ChannelSearchModel searchModel) {
 
         Pageable page = Utilities.makePagable(
                 searchModel
         );
-        Page<Channel> channelPages = channelRepository.findAllByCategoryIdAndNameContainingIgnoreCase(categoryId,
+        Page<Channel> channelPages = channelRepository.findAllByCategoryIdAndNameContainingIgnoreCase(
+                 searchModel.getCategories().stream().toList(),
                 searchModel.getName(), page);
 
         if(channelPages.isEmpty()){
@@ -206,4 +226,23 @@ public class ChannelServiceImpl implements ChannelService {
                 (channelProfiler.toChannelSelectListDto(channelPages),
                         true, "","", HttpStatus.OK);
     }
+
+    @Transactional(readOnly = true)
+    public ServiceResponse<PagedResult<ChannelSelectListDto>> getTopMany(SearchModel searchModel){
+        Pageable page = Utilities.makePagable(
+                searchModel
+        );
+        Page<Channel> channelPages = channelRepository.findTopChannelNumOfFollowes(
+                searchModel.getName(), page);
+
+        if(channelPages.isEmpty()){
+            return new ServiceResponse<>(null, false,"there is no channels",
+                    "لا يوجد قنوات", HttpStatus.NOT_FOUND);
+        }
+
+        return new ServiceResponse<PagedResult<ChannelSelectListDto>>
+                (channelProfiler.toChannelSelectListDto(channelPages),
+                        true, "","", HttpStatus.OK);
+    }
+
 }
