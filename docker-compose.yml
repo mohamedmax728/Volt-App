@@ -10,6 +10,7 @@ services:
       SPRING_DATASOURCE_USERNAME: mohamed
       SPRING_DATASOURCE_PASSWORD: adel
       uploadfilesDir: /app
+      viewfileendpoint: https://92.112.194.44:8028/api/fileManager/getImage
     volumes:
       - ./Uploads/ProfilePicture:/app/ProfilePicture
     depends_on:
