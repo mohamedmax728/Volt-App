@@ -9,7 +9,7 @@ COPY ./target/VoltApp-0.0.1-SNAPSHOT.jar app.jar
 RUN mkdir -p /app
 RUN chmod 777 /app
 # Expose the port that your Spring Boot application will run on
-EXPOSE 8080
+EXPOSE 8028
 
 # Set the entrypoint to run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "app.jar"]
