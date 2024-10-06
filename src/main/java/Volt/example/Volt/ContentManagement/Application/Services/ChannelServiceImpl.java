@@ -85,23 +85,10 @@ public class ChannelServiceImpl implements ChannelService {
                 user.setImagePath(profileImgPath);
                 entity.setImagePath(profileImgPath);
             }
-
-            if(!Utilities.isNullOrEmpty(user.getImagePath())){
-                UploadFiles.deleteFile(user.getImagePath());
-            }
-            if(!Utilities.isNullOrEmpty(user.getImagePath()) && channelAddDto.getIsProfileImageUpdated() ){
-                UploadFiles.deleteFile(user.getImagePath());
-            }
-            if(channelAddDto.getIsProfileImageUpdated()){
-                String profileImgPath = UploadFiles.uploadProfileImages(channelAddDto.getProfileImage(),
-                        uploadFilesDir + "/ProfilePicture/");
-                entity.setImagePath(profileImgPath);
-                user.setImagePath(profileImgPath);
-            }
             else{
-                entity.setImagePath(user.getImagePath());
+                entity.setImagePath(null);
             }
-            if(!channelAddDto.getProfileImage().isEmpty()){
+            if(!channelAddDto.getBackgoundImage().isEmpty()){
                 String backGroundImgPath = UploadFiles.uploadProfileImages(channelAddDto.getBackgoundImage(),
                         uploadFilesDir + "/ProfilePicture/");
                 entity.setBackgoundImagePath(backGroundImgPath);
@@ -162,7 +149,9 @@ public class ChannelServiceImpl implements ChannelService {
                 channel.getUser().setImagePath(profileImgPath);
             }
             if(channelUpdateDto.getIsBackgoundImageUpdated()){
-                UploadFiles.deleteFile(channel.getBackgoundImagePath());
+                if(!Utilities.isNullOrEmpty(channel.getBackgoundImagePath())){
+                    UploadFiles.deleteFile(channel.getBackgoundImagePath());
+                }
                 String backGroundImgPath = UploadFiles.uploadProfileImages(channelUpdateDto.getBackgoundImage()
                         ,uploadFilesDir + "/ProfilePicture/");
                 channel.setBackgoundImagePath(backGroundImgPath);
